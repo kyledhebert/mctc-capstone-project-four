@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-# this a the rare case where importing anything from Django
-# directly into settings is considered okay
-from django.core.exceptions import ImproperlyConfigured
+
+from core.utils import get_env_variable
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,14 +21,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
-
-def get_env_variable(variable_name):
-    """Get the environment variable for the specified name"""
-    try:
-        return os.environ[variable_name]
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(variable_name)
-        raise ImproperlyConfigured(error_msg)
 
 SECRET_KEY = get_env_variable("DJANGO_SECRET_KEY")
 

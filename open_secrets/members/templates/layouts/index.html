@@ -1,0 +1,18 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Home - {{ block.super }}{% endblock %}
+{% block content %}
+    <h1>Project Four</h1>
+    <p>This sure is fancy!</p>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit" />
+    </form>
+    {% if legislator_list %}
+    <ul>
+        {% for legislator in legislator_list %}
+        <li>{{ legislator }} </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{% endblock %}  

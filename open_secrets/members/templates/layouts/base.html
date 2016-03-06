@@ -1,0 +1,24 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        {% block title %}Project Four{% endblock %}
+    </title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    {% block header %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>Project Four</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+            </ul>
+        </nav>
+    </header>   
+    {% block content %}{% endblock %}
+    {% block footer %}{% endblock %}
+</body>
+</html>
