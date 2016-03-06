@@ -1,0 +1,14 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Member Detail - {{ block.super }}{% endblock %}
+{% block content %}
+    <h1>Member Detail</h1>
+    {% if contributors_list %}
+        <ul>
+        {% for contributor in contributors_list %}
+            <li>{{ contributor }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No details available</p>
+    {% endif %}
+{% endblock %}  

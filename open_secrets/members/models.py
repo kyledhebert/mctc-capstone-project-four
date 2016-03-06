@@ -9,3 +9,13 @@ class Legislator(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Organization(models.Model):
+    name = models.CharField(max_length=250)
+    total_contributed = models.FloatField()
+    pac_contributions = models.FloatField()
+    individual_contributions = models.FloatField()
+
+    def __str__(self):
+        return self.name
