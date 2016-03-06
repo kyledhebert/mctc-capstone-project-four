@@ -2,7 +2,7 @@
 {% block title %}Home - {{ block.super }}{% endblock %}
 {% block content %}
     <h1>Project Four</h1>
-    <p>This sure is fancy!</p>
+    <p>Select a state to see a list of legislators from that state.</p>
     <form action="" method="post">
         {% csrf_token %}
         {{ form }}
@@ -10,8 +10,9 @@
     </form>
     {% if legislator_list %}
     <ul>
+        <p>Click on a link to see who contributed to the legislator's 2016 campaign</p>
         {% for legislator in legislator_list %}
-        <li>{{ legislator }} </li>
+        <li><a href="{% url 'members:member_detail' legislator.candidate_id %}">{{ legislator }} </li>
         {% endfor %}
     </ul>
     {% endif %}

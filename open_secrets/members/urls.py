@@ -4,6 +4,6 @@ from . import views
 
 app_name = 'members'
 urlpatterns = [
-    # url(r'legisislator_list/$', views.legisislator_list,
-        # name='legisislator_list'),
+    url(r'^(?P<candidate_id>N[0-9]+)/$', views.member_detail,
+        name='member_detail')
 ]

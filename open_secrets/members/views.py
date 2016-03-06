@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from .forms import StatePickerForm
 
-from .utils import get_legislator_list
+from .utils import get_legislator_list, get_contributors_list
 
 
 def index(request):
@@ -27,5 +27,10 @@ def index(request):
         })
 
 
-def legislator_list():
-    pass
+def member_detail(request, candidate_id):
+    # query the Open Secrets API to get a list of contributors
+    contributors_list = get_contributors_list(candidate_id)
+
+    return render(request, 'members/member_detail.html', {
+        'contributors_list': contributors_list,
+        })
