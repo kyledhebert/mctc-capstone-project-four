@@ -2,9 +2,14 @@ import requests
 
 from core.utils import get_env_variable
 
+from requests_futures.sessions import FuturesSession
+
 from .models import Legislator, Organization
 
-OPEN_SECRETS_API = get_env_variable("OPEN_SECRETS_API")
+# retrieve the API keys from environment variables
+OPEN_SECRETS_API = get_env_variable('OPEN_SECRETS_API')
+VOTE_SMART_API = get_env_variable('VOTE_SMART_API')
+NPR_API = get_env_variable('NPR_API')
 
 
 def verify_api_response(request):
@@ -30,6 +35,8 @@ def verify_JSON_object(request):
     return request    
 
 
+# API calls to OpenSecrets for generating legislator lists by state
+# used by index.html
 def get_legislator_list(state):
     """Returns a list of legislators"""
     # pass the state to get a JSON response from the API
@@ -84,27 +91,82 @@ def create_legislator(attributes_dict):
     return legislator
 
 
-def get_contributors_list(candidate_id):
+# API calls to OpenSecret and VoteSmart to get details for display
+# on member_detail.html
+def get_details_dict(candidate_id, votesmart_id):
+    """Returns a dictionary of contributors and ratings"""
+    # start a FuturesSessions so we can make API calls asynchronously
+    session = FuturesSession()
+    contributors_list = get_contributors_list(session, candidate_id)
+    ratings_list = get_ratings_list(session, votesmart_id)
+    details_dict = {'contributors': contributors_list, 'ratings': ratings_list}
+    return details_dict    
+
+
+def get_ratings_list(session, votesmart_id):
+    """Returns a list of member ratings"""
+    # pass the votesmart id to get a JSON response from the API
+    response = get_ratings(session, votesmart_id)
+    # parse the response to get a list of ratings
+    ratings_list = parse_ratings(response)
+    return ratings_list
+
+
+def get_contributors_list(session, candidate_id):
     """Returns a list of contributors from the JSON response"""
     # pass the candidate id to get a JSON response from the API
-    response = get_contributors(candidate_id)
+    response = get_contributors(session, candidate_id)
     # parse the response to get the list of contributors
     contributors_list = parse_contributors(response)
     return contributors_list
 
 
-def get_contributors(candidate_id):
+def get_ratings(session, votesmart_id):
+    """Returns a JSON response from the VoteSmart API"""
+    payload = {'key': VOTE_SMART_API, 'candidateId': votesmart_id}
+    request = session.get(
+        'http://api.votesmart.org/Rating.getCandidateRating?&o=JSON')
+
+    # make sure we get a vaiid HTTP response and a JSON object
+    verify_api_response(request)
+    verify_JSON_object(request)
+
+    return request.json
+
+
+def get_contributors(session, candidate_id):
     """Returns a JSON response from the Open Secrets API"""
     payload = {'cid': candidate_id, 'apikey': OPEN_SECRETS_API, 'cycle': 2016}
-    request = requests.get(
+    request = session.get(
         'http://www.opensecrets.org/api/?method=candContrib&output=json',
         params=payload)
 
-    # exception handling
     verify_api_response(request)
     verify_JSON_object(request)
 
     return request.json()
+
+
+def parse_ratings(response_dict):
+    """Returns a list of Rating objects"""
+    # create a list for storing Rating objects
+    ratings_list = []
+    # unpack the JSON response
+    list_of_ratings = response.get('rating')
+    # each rating in the list is a dict
+    for rating in list_of_ratings:
+        # get the categories dict for each rating
+        # this is to evaluate if the rating is relevant
+        categories_dict = rating.get('categories')
+        list_of_categories = categories_dict.get('category')
+        # now see if the category id matches 41
+        for category in list_of_categories:
+            if category.get('categoryId') == 41:
+                # if it matches use the rating dict to create a Rating object
+                rating = create_rating(rating)
+                # add the rating to the list
+                ratings_list.append(rating)
+    return ratings_list
 
 
 def parse_contributors(response):
@@ -127,6 +189,17 @@ def parse_contributors(response):
     return contributor_list
 
 
+def create_rating(rating_dict):
+    """Returns a Rating object with its values assigned"""
+    # create a new Rating instance and assign its values from the dict
+    rating = Rating(
+        timespan = rating_dict.get('timespan'),
+        rating_text = rating_dict.get('ratingText'),
+        rating = rating_dict.get('rating')
+        )
+    return rating
+
+
 def create_organization(attributes_dict):
     """Returns an Organization object with its values assigned"""
     # create a new organization instance and assign its values from the dict
@@ -137,4 +210,3 @@ def create_organization(attributes_dict):
         individual_contributions = attributes_dict.get('indivs')
         )
     return organization
-    
