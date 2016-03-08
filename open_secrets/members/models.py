@@ -19,3 +19,12 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Rating(models.Model):
+    timespan = models.CharField(max_length=20)
+    rating_text = models.TextField()
+    rating = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.rating_text
