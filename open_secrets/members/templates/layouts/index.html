@@ -12,7 +12,7 @@
     <ul>
         <p>Click on a link to see who contributed to the legislator's 2016 campaign</p>
         {% for legislator in legislator_list %}
-        <li><a href="{% url 'members:member_detail' legislator.candidate_id legislator.votesmart_id %}">{{ legislator }}</a></li>
+            <li><a href="{% url 'members:member_detail' legislator.candidate_id legislator.votesmart_id %}">{{ legislator }}</a></li>
         {% endfor %}
     </ul>
     {% endif %}

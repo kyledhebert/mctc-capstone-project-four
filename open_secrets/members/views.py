@@ -27,7 +27,7 @@ def index(request):
         })
 
 
-def member_detail(request, candidate_id, votesmart_id):
+def member_detail(request, candidate_id, votesmart_id='0'):
     # get a dict of member details by querying the OpenSecrets
     # and VoteSmart APIs
     member_details_dict = get_details_dict(candidate_id, votesmart_id)

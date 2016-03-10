@@ -4,7 +4,7 @@ from core.utils import get_env_variable
 
 from requests_futures.sessions import FuturesSession
 
-from .models import Legislator, Organization
+from .models import Legislator, Organization, Rating
 
 # retrieve the API keys from environment variables
 OPEN_SECRETS_API = get_env_variable('OPEN_SECRETS_API')
@@ -17,11 +17,11 @@ def verify_api_response(request):
     # make sure we get a 200 response
     try:
         request.raise_for_status()
-    except  requests.exceptions.HTTPError as e:
+    except requests.exceptions.HTTPError as e:
         # this will catch anything that isn't a 2XX (4XX, 5XX)
         return "Error: {}".format(e)
 
-    return request    
+    return request
 
 
 def verify_JSON_object(request):
@@ -32,7 +32,7 @@ def verify_JSON_object(request):
     except ValueError as e:
         return "Error: {}".format(e)
 
-    return request    
+    return request
 
 
 # API calls to OpenSecrets for generating legislator lists by state
@@ -100,7 +100,7 @@ def get_details_dict(candidate_id, votesmart_id):
     contributors_list = get_contributors_list(session, candidate_id)
     ratings_list = get_ratings_list(session, votesmart_id)
     details_dict = {'contributors': contributors_list, 'ratings': ratings_list}
-    return details_dict    
+    return details_dict
 
 
 def get_ratings_list(session, votesmart_id):
@@ -125,13 +125,14 @@ def get_ratings(session, votesmart_id):
     """Returns a JSON response from the VoteSmart API"""
     payload = {'key': VOTE_SMART_API, 'candidateId': votesmart_id}
     request = session.get(
-        'http://api.votesmart.org/Rating.getCandidateRating?&o=JSON')
+        'http://api.votesmart.org/Rating.getCandidateRating?&o=JSON',
+        params=payload)
 
     # make sure we get a vaiid HTTP response and a JSON object
-    verify_api_response(request)
-    verify_JSON_object(request)
+    verify_api_response(request.result())
+    verify_JSON_object(request.result())
 
-    return request.json
+    return request.result().json()
 
 
 def get_contributors(session, candidate_id):
@@ -141,30 +142,30 @@ def get_contributors(session, candidate_id):
         'http://www.opensecrets.org/api/?method=candContrib&output=json',
         params=payload)
 
-    verify_api_response(request)
-    verify_JSON_object(request)
+    verify_api_response(request.result())
+    verify_JSON_object(request.result())
 
-    return request.json()
+    return request.result().json()
 
 
-def parse_ratings(response_dict):
+def parse_ratings(response):
     """Returns a list of Rating objects"""
     # create a list for storing Rating objects
     ratings_list = []
     # unpack the JSON response
-    list_of_ratings = response.get('rating')
-    # each rating in the list is a dict
-    for rating in list_of_ratings:
-        # get the categories dict for each rating
-        # this is to evaluate if the rating is relevant
-        categories_dict = rating.get('categories')
-        list_of_categories = categories_dict.get('category')
-        # now see if the category id matches 41
-        for category in list_of_categories:
-            if category.get('categoryId') == 41:
-                # if it matches use the rating dict to create a Rating object
-                rating = create_rating(rating)
-                # add the rating to the list
+    candidate_rating_dict = response.get('candidateRating')
+    list_of_ratings = candidate_rating_dict.get('rating')
+    # each item in the list_of_ratings is a dict
+    for rating_dict in list_of_ratings:
+        # check the value of the rating
+        try:
+            if (int(rating_dict.get('rating')) >= 75):
+                rating = create_rating(rating_dict)
+                ratings_list.append(rating)
+        # sometimes the rating is A-F
+        except ValueError:
+            if(rating_dict.get('rating') in 'ABC'):
+                rating = create_rating(rating_dict)
                 ratings_list.append(rating)
     return ratings_list
 
@@ -193,9 +194,9 @@ def create_rating(rating_dict):
     """Returns a Rating object with its values assigned"""
     # create a new Rating instance and assign its values from the dict
     rating = Rating(
-        timespan = rating_dict.get('timespan'),
-        rating_text = rating_dict.get('ratingText'),
-        rating = rating_dict.get('rating')
+        timespan=rating_dict.get('timespan'),
+        rating_text=rating_dict.get('ratingText'),
+        rating=rating_dict.get('rating')
         )
     return rating
 
@@ -204,9 +205,9 @@ def create_organization(attributes_dict):
     """Returns an Organization object with its values assigned"""
     # create a new organization instance and assign its values from the dict
     organization = Organization(
-        name = attributes_dict.get('org_name'),
-        total_contributed = attributes_dict.get('total'),
-        pac_contributions = attributes_dict.get('pacs'),
-        individual_contributions = attributes_dict.get('indivs')
+        name=attributes_dict.get('org_name'),
+        total_contributed=attributes_dict.get('total'),
+        pac_contributions=attributes_dict.get('pacs'),
+        individual_contributions=attributes_dict.get('indivs')
         )
     return organization
