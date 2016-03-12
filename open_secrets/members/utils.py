@@ -98,7 +98,12 @@ def get_details_dict(candidate_id, votesmart_id):
     # start a FuturesSessions so we can make API calls asynchronously
     session = FuturesSession()
     contributors_list = get_contributors_list(session, candidate_id)
-    ratings_list = get_ratings_list(session, votesmart_id)
+    # if there is no votesmart id, pass a string
+    if votesmart_id:
+        ratings_list = get_ratings_list(session, votesmart_id)
+    else:
+        ratings_list = ['There are no VoteSmart rankings for this candidate']
+
     details_dict = {'contributors': contributors_list, 'ratings': ratings_list}
     return details_dict
 
@@ -158,13 +163,18 @@ def parse_ratings(response):
     # each item in the list_of_ratings is a dict
     for rating_dict in list_of_ratings:
         # check the value of the rating
-        try:
-            if (int(rating_dict.get('rating')) >= 75):
+        try: 
+            # we only want ratings >=90 or 'A or B' rankings with ratingText
+            if (int(rating_dict.get('rating')) >= 90) and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 ratings_list.append(rating)
         # sometimes the rating is A-F
         except ValueError:
-            if(rating_dict.get('rating') in 'ABC'):
+            if(rating_dict.get('rating') in 'AB') and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 ratings_list.append(rating)
     return ratings_list
