@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from .forms import StatePickerForm
 
-from .utils import get_legislator_list, get_contributors_list
+from .utils import get_legislator_list, get_details_dict
 
 
 def index(request):
@@ -27,10 +27,18 @@ def index(request):
         })
 
 
-def member_detail(request, candidate_id):
-    # query the Open Secrets API to get a list of contributors
-    contributors_list = get_contributors_list(candidate_id)
+# a default value for votesmart id gets passed since all members 
+# won't have a votesmart id
+def member_detail(request, candidate_id, votesmart_id=0):
+    # get a dict of member details by querying the OpenSecrets
+    # and VoteSmart APIs
+    member_details_dict = get_details_dict(candidate_id, votesmart_id)
+
+    # unpack the dictionary to create the two lists
+    contributors_list = member_details_dict.get('contributors')
+    ratings_list = member_details_dict.get('ratings')
 
     return render(request, 'members/member_detail.html', {
         'contributors_list': contributors_list,
+        'ratings_list': ratings_list,
         })

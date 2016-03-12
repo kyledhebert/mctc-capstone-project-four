@@ -2,9 +2,14 @@ import requests
 
 from core.utils import get_env_variable
 
-from .models import Legislator, Organization
+from requests_futures.sessions import FuturesSession
 
-OPEN_SECRETS_API = get_env_variable("OPEN_SECRETS_API")
+from .models import Legislator, Organization, Rating
+
+# retrieve the API keys from environment variables
+OPEN_SECRETS_API = get_env_variable('OPEN_SECRETS_API')
+VOTE_SMART_API = get_env_variable('VOTE_SMART_API')
+NPR_API = get_env_variable('NPR_API')
 
 
 def verify_api_response(request):
@@ -12,11 +17,11 @@ def verify_api_response(request):
     # make sure we get a 200 response
     try:
         request.raise_for_status()
-    except  requests.exceptions.HTTPError as e:
+    except requests.exceptions.HTTPError as e:
         # this will catch anything that isn't a 2XX (4XX, 5XX)
         return "Error: {}".format(e)
 
-    return request    
+    return request
 
 
 def verify_JSON_object(request):
@@ -27,9 +32,11 @@ def verify_JSON_object(request):
     except ValueError as e:
         return "Error: {}".format(e)
 
-    return request    
+    return request
 
 
+# API calls to OpenSecrets for generating legislator lists by state
+# used by index.html
 def get_legislator_list(state):
     """Returns a list of legislators"""
     # pass the state to get a JSON response from the API
@@ -84,27 +91,93 @@ def create_legislator(attributes_dict):
     return legislator
 
 
-def get_contributors_list(candidate_id):
+# API calls to OpenSecret and VoteSmart to get details for display
+# on member_detail.html
+def get_details_dict(candidate_id, votesmart_id):
+    """Returns a dictionary of contributors and ratings"""
+    # start a FuturesSessions so we can make API calls asynchronously
+    session = FuturesSession()
+    contributors_list = get_contributors_list(session, candidate_id)
+    # if there is no votesmart id, pass a string
+    if votesmart_id:
+        ratings_list = get_ratings_list(session, votesmart_id)
+    else:
+        ratings_list = ['There are no VoteSmart rankings for this candidate']
+
+    details_dict = {'contributors': contributors_list, 'ratings': ratings_list}
+    return details_dict
+
+
+def get_ratings_list(session, votesmart_id):
+    """Returns a list of member ratings"""
+    # pass the votesmart id to get a JSON response from the API
+    response = get_ratings(session, votesmart_id)
+    # parse the response to get a list of ratings
+    ratings_list = parse_ratings(response)
+    return ratings_list
+
+
+def get_contributors_list(session, candidate_id):
     """Returns a list of contributors from the JSON response"""
     # pass the candidate id to get a JSON response from the API
-    response = get_contributors(candidate_id)
+    response = get_contributors(session, candidate_id)
     # parse the response to get the list of contributors
     contributors_list = parse_contributors(response)
     return contributors_list
 
 
-def get_contributors(candidate_id):
+def get_ratings(session, votesmart_id):
+    """Returns a JSON response from the VoteSmart API"""
+    payload = {'key': VOTE_SMART_API, 'candidateId': votesmart_id}
+    request = session.get(
+        'http://api.votesmart.org/Rating.getCandidateRating?&o=JSON',
+        params=payload)
+
+    # make sure we get a vaiid HTTP response and a JSON object
+    verify_api_response(request.result())
+    verify_JSON_object(request.result())
+
+    return request.result().json()
+
+
+def get_contributors(session, candidate_id):
     """Returns a JSON response from the Open Secrets API"""
     payload = {'cid': candidate_id, 'apikey': OPEN_SECRETS_API, 'cycle': 2016}
-    request = requests.get(
+    request = session.get(
         'http://www.opensecrets.org/api/?method=candContrib&output=json',
         params=payload)
 
-    # exception handling
-    verify_api_response(request)
-    verify_JSON_object(request)
+    verify_api_response(request.result())
+    verify_JSON_object(request.result())
 
-    return request.json()
+    return request.result().json()
+
+
+def parse_ratings(response):
+    """Returns a list of Rating objects"""
+    # create a list for storing Rating objects
+    ratings_list = []
+    # unpack the JSON response
+    candidate_rating_dict = response.get('candidateRating')
+    list_of_ratings = candidate_rating_dict.get('rating')
+    # each item in the list_of_ratings is a dict
+    for rating_dict in list_of_ratings:
+        # check the value of the rating
+        try: 
+            # we only want ratings >=90 or 'A or B' rankings with ratingText
+            if (int(rating_dict.get('rating')) >= 90) and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
+                rating = create_rating(rating_dict)
+                ratings_list.append(rating)
+        # sometimes the rating is A-F
+        except ValueError:
+            if(rating_dict.get('rating') in 'AB') and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
+                rating = create_rating(rating_dict)
+                ratings_list.append(rating)
+    return ratings_list
 
 
 def parse_contributors(response):
@@ -127,14 +200,24 @@ def parse_contributors(response):
     return contributor_list
 
 
+def create_rating(rating_dict):
+    """Returns a Rating object with its values assigned"""
+    # create a new Rating instance and assign its values from the dict
+    rating = Rating(
+        timespan=rating_dict.get('timespan'),
+        rating_text=rating_dict.get('ratingText'),
+        rating=rating_dict.get('rating')
+        )
+    return rating
+
+
 def create_organization(attributes_dict):
     """Returns an Organization object with its values assigned"""
     # create a new organization instance and assign its values from the dict
     organization = Organization(
-        name = attributes_dict.get('org_name'),
-        total_contributed = attributes_dict.get('total'),
-        pac_contributions = attributes_dict.get('pacs'),
-        individual_contributions = attributes_dict.get('indivs')
+        name=attributes_dict.get('org_name'),
+        total_contributed=attributes_dict.get('total'),
+        pac_contributions=attributes_dict.get('pacs'),
+        individual_contributions=attributes_dict.get('indivs')
         )
     return organization
-    

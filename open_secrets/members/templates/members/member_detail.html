@@ -3,12 +3,38 @@
 {% block content %}
     <h1>Member Detail</h1>
     {% if contributors_list %}
-        <ul>
-        {% for contributor in contributors_list %}
-            <li>{{ contributor }}</li>
-        {% endfor %}
-        </ul>
+    <h2>2016 Contributors</h2>
+    <h3>These organizations donated to the legislator in 2016</h3>
+        <table>
+            <tr>
+                <th>Contributor</th>
+                <th>Total Contributed</th>
+                <th>PAC Contributions</th>
+                <th>Individual Contributions</th>
+            </tr>
+        
+            {% for contributor in contributors_list %}
+                <tr>
+                    <td>{{ contributor }}</td>
+                    <td>${{ contributor.total_contributed }}</td>
+                    <td>${{ contributor.pac_contributions }}</td>
+                    <td>${{ contributor.individual_contributions }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        
     {% else %}
-        <p>No details available</p>
+        <p>No contributor details available</p>
+    {% endif %}
+    {% if ratings_list %}
+    <h2>Ratings</h2>
+    <h3>These organizations gave the legislator a grade of B or higher in 2015-2016.</h3>
+    <ul>
+        {% for rating in ratings_list %}
+            <li>{{ rating }}</li>
+        {% endfor %}
+    </ul>    
+    {% else %}
+        <p>No ratings info available</p>
     {% endif %}
 {% endblock %}  
