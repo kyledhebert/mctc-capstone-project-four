@@ -1,10 +1,10 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Member Detail - {{ block.super }}{% endblock %}
 {% block content %}
-    <h1>Member Detail</h1>
+    <h1>{{ candidate_name }}</h1>
     {% if contributors_list %}
     <h2>2016 Contributors</h2>
-    <h3>These organizations donated to the legislator in 2016</h3>
+    <h3>These organizations donated to {{ candidate_name }} in 2016</h3>
         <table>
             <tr>
                 <th>Contributor</th>
@@ -26,9 +26,9 @@
     {% else %}
         <p>No contributor details available</p>
     {% endif %}
+     <h2>Ratings</h2>
     {% if ratings_list %}
-    <h2>Ratings</h2>
-    <h3>These organizations gave the legislator a grade of B or higher in 2015-2016.</h3>
+    <h3>These organizations gave {{ candidate_name }} a grade of B or higher in 2015-2016.</h3>
     <ul>
         {% for rating in ratings_list %}
             <li>{{ rating }}</li>
@@ -37,4 +37,15 @@
     {% else %}
         <p>No ratings info available</p>
     {% endif %}
+    <h2>Recent NPR Stories</h2>
+    {% if npr_story_list %}
+    <h3>NPR recently aired these stories about {{ candidate_name }}</h3>
+    <ul>
+        {% for story in npr_story_list %}
+            <li><a href="{{ story.url}}">{{ story }}</a></li>
+        {% endfor %}        
+    </ul>
+    {% else %}
+        <p>No recent stories available</p>
+    {% endif %}        
 {% endblock %}  
