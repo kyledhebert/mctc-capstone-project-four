@@ -4,7 +4,7 @@ from core.utils import get_env_variable
 
 from requests_futures.sessions import FuturesSession
 
-from .models import Legislator, Organization, Rating
+from .models import Legislator, Organization, Rating, NPRStory
 
 # retrieve the API keys from environment variables
 OPEN_SECRETS_API = get_env_variable('OPEN_SECRETS_API')
@@ -91,9 +91,9 @@ def create_legislator(attributes_dict):
     return legislator
 
 
-# API calls to OpenSecret and VoteSmart to get details for display
-# on member_detail.html
-def get_details_dict(candidate_id, votesmart_id):
+# API calls to OpenSecrets, VoteSmart and NPR to get details for display
+# in member_detail.html
+def get_details_dict(candidate_name, candidate_id, votesmart_id):
     """Returns a dictionary of contributors and ratings"""
     # start a FuturesSessions so we can make API calls asynchronously
     session = FuturesSession()
@@ -104,8 +104,19 @@ def get_details_dict(candidate_id, votesmart_id):
     else:
         ratings_list = ['There are no VoteSmart rankings for this candidate']
 
-    details_dict = {'contributors': contributors_list, 'ratings': ratings_list}
+    npr_story_list = get_story_list(session, candidate_name)
+    details_dict = {'contributors': contributors_list, 'ratings': ratings_list,
+                    'stories': npr_story_list}
     return details_dict
+
+
+def get_story_list(session, candidate_name):
+    """Return a list of NPR headlines and urls"""
+    # pass the candidate_name to get a JSON response from the NPR API
+    response = get_stories(session, candidate_name)
+    # parse the response to get a list of stories
+    story_list = parse_stories(response)
+    return story_list
 
 
 def get_ratings_list(session, votesmart_id):
@@ -124,6 +135,20 @@ def get_contributors_list(session, candidate_id):
     # parse the response to get the list of contributors
     contributors_list = parse_contributors(response)
     return contributors_list
+
+
+def get_stories(session, candidate_name):
+    """Returns a JSON response from the NPR API"""
+    payload = {'apiKey': NPR_API, 'searchTerm': candidate_name}
+    request = session.get(
+        'http://api.npr.org/query?fields=title&output=JSON'
+        '&searchType=mainText', params=payload)
+
+    # make sure we get a vaiid HTTP response and a JSON object
+    verify_api_response(request.result())
+    verify_JSON_object(request.result())
+
+    return request.result().json()
 
 
 def get_ratings(session, votesmart_id):
@@ -153,6 +178,30 @@ def get_contributors(session, candidate_id):
     return request.result().json()
 
 
+def parse_stories(response):
+    """Returns a list of NPRStory objects"""
+    # create a list for storing NPRStory objects
+    story_list = []
+    # unpack the JSON response
+    story_dict = response.get('list')
+    list_of_stories = story_dict.get('story')
+    # each story in the list is a dict
+    try:
+        for story in list_of_stories:
+            # first get the url for the story
+            story_url_list = story.get('link')
+            url = story_url_list[0].get('$text')
+            # then get the headline
+            title_dict = story.get('title')
+            title = title_dict.get('$text')
+            npr_story = create_npr_story(url, title)
+            story_list.append(npr_story)
+    except TypeError:
+        return story_list
+        
+    return story_list
+
+
 def parse_ratings(response):
     """Returns a list of Rating objects"""
     # create a list for storing Rating objects
@@ -163,7 +212,7 @@ def parse_ratings(response):
     # each item in the list_of_ratings is a dict
     for rating_dict in list_of_ratings:
         # check the value of the rating
-        try: 
+        try:
             # we only want ratings >=90 or 'A or B' rankings with ratingText
             if (int(rating_dict.get('rating')) >= 90) and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
@@ -198,6 +247,13 @@ def parse_contributors(response):
         contributor_list.append(organization)
     # return the list
     return contributor_list
+
+
+def create_npr_story(url, title):
+    """Returns a NPRStory object with its values assigned"""
+    # create a new NPRStory instance and assign the values
+    npr_story = NPRStory(url=url, title=title)
+    return npr_story
 
 
 def create_rating(rating_dict):

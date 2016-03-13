@@ -29,16 +29,20 @@ def index(request):
 
 # a default value for votesmart id gets passed since all members 
 # won't have a votesmart id
-def member_detail(request, candidate_id, votesmart_id=0):
-    # get a dict of member details by querying the OpenSecrets
-    # and VoteSmart APIs
-    member_details_dict = get_details_dict(candidate_id, votesmart_id)
+def member_detail(request, candidate_name, candidate_id, votesmart_id=0):
+    # get a dict of member details by querying the OpenSecrets,
+    # VoteSmart, and NPR APIs
+    member_details_dict = get_details_dict(candidate_name,
+                                           candidate_id, votesmart_id)
 
-    # unpack the dictionary to create the two lists
+    # unpack the dictionary to create the three lists
     contributors_list = member_details_dict.get('contributors')
     ratings_list = member_details_dict.get('ratings')
+    npr_story_list = member_details_dict.get('stories')
 
     return render(request, 'members/member_detail.html', {
+        'candidate_name': candidate_name,
         'contributors_list': contributors_list,
         'ratings_list': ratings_list,
+        'npr_story_list': npr_story_list
         })

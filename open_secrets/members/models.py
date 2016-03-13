@@ -28,3 +28,11 @@ class Rating(models.Model):
 
     def __str__(self):
         return self.rating_text
+
+
+class NPRStory(models.Model):
+    url = models.URLField(max_length=250)
+    title = models.CharField(max_length=250)
+
+    def __str__(self):
+        return self.title
