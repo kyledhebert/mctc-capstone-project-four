@@ -27,13 +27,23 @@
         <p>No contributor details available</p>
     {% endif %}
      <h2>Ratings</h2>
-    {% if ratings_list %}
+    {% if good_ratings_list %}
     <h3>These organizations gave {{ candidate_name }} a grade of B or higher in 2015-2016.</h3>
     <ul>
-        {% for rating in ratings_list %}
+        {% for rating in good_ratings_list %}
             <li>{{ rating }}</li>
         {% endfor %}
-    </ul>    
+    </ul>
+    {% else %}
+        <p>No ratings info available</p>
+    {% endif %}
+    {% if bad_ratings_list %}
+    <h3>These organizations gave {{ candidate_name }} a grade of D or lower in 2015-2016.</h3>
+    <ul>
+        {% for rating in bad_ratings_list %}
+            <li>{{ rating }}</li>
+        {% endfor %}
+    </ul>
     {% else %}
         <p>No ratings info available</p>
     {% endif %}
