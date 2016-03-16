@@ -100,12 +100,12 @@ def get_details_dict(candidate_name, candidate_id, votesmart_id):
     contributors_list = get_contributors_list(session, candidate_id)
     # if there is no votesmart id, pass a string
     if votesmart_id:
-        ratings_list = get_ratings_list(session, votesmart_id)
+        ratings_dict = get_ratings_list(session, votesmart_id)
     else:
-        ratings_list = ['There are no VoteSmart rankings for this candidate']
+        ratings_dict = ['There are no VoteSmart rankings for this candidate']
 
     npr_story_list = get_story_list(session, candidate_name)
-    details_dict = {'contributors': contributors_list, 'ratings': ratings_list,
+    details_dict = {'contributors': contributors_list, 'ratings': ratings_dict,
                     'stories': npr_story_list}
     return details_dict
 
@@ -124,8 +124,8 @@ def get_ratings_list(session, votesmart_id):
     # pass the votesmart id to get a JSON response from the API
     response = get_ratings(session, votesmart_id)
     # parse the response to get a list of ratings
-    ratings_list = parse_ratings(response)
-    return ratings_list
+    ratings_dict = parse_ratings(response)
+    return ratings_dict
 
 
 def get_contributors_list(session, candidate_id):
@@ -198,35 +198,50 @@ def parse_stories(response):
             story_list.append(npr_story)
     except TypeError:
         return story_list
-        
+
     return story_list
 
 
 def parse_ratings(response):
     """Returns a list of Rating objects"""
     # create a list for storing Rating objects
-    ratings_list = []
+    good_ratings_list = []
+    bad_ratings_list = []
     # unpack the JSON response
     candidate_rating_dict = response.get('candidateRating')
     list_of_ratings = candidate_rating_dict.get('rating')
+
     # each item in the list_of_ratings is a dict
     for rating_dict in list_of_ratings:
         # check the value of the rating
         try:
-            # we only want ratings >=90 or 'A or B' rankings with ratingText
-            if (int(rating_dict.get('rating')) >= 90) and rating_dict.get(
+            if (int(rating_dict.get('rating')) >= 80) and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
-                ratings_list.append(rating)
-        # sometimes the rating is A-F
+                good_ratings_list.append(rating)
+            elif (int(rating_dict.get('rating')) <= 20) and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
+                rating = create_rating(rating_dict)
+                bad_ratings_list.append(rating)
+        # sometimes the rating is a letter grade
         except ValueError:
             if(rating_dict.get('rating') in 'AB') and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
-                ratings_list.append(rating)
-    return ratings_list
+                good_ratings_list.append(rating)
+
+            elif(rating_dict.get('rating') in 'DF') and rating_dict.get(
+                'ratingText') and (rating_dict.get('timespan')
+                                   in ['2016', '2015-2016']):
+                rating = create_rating(rating_dict)
+                bad_ratings_list.append(rating)
+            ratings_list_dict = {"good_ratings": good_ratings_list,
+                                 "bad_ratings": bad_ratings_list}
+
+    return ratings_list_dict
 
 
 def parse_contributors(response):
