@@ -35,7 +35,7 @@ def member_detail(request, candidate_name, candidate_id, votesmart_id=0):
     member_details_dict = get_details_dict(candidate_name,
                                            candidate_id, votesmart_id)
 
-    # unpack the dictionary to create the three lists
+    # unpack the dictionary to create the lists
     contributors_list = member_details_dict.get('contributors')
     ratings_dict = member_details_dict.get('ratings')
     good_ratings_list = ratings_dict.get('good_ratings')

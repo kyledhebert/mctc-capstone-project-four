@@ -198,7 +198,7 @@ def parse_stories(response):
             story_list.append(npr_story)
     except TypeError:
         return story_list
-        
+
     return story_list
 
 
@@ -220,25 +220,27 @@ def parse_ratings(response):
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 good_ratings_list.append(rating)
-            elif (int(rating_dict.get('rating')) <=20) and rating_dict.get(
+            elif (int(rating_dict.get('rating')) <= 20) and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 bad_ratings_list.append(rating)
-        # sometimes the rating is A-F
-            # we only want ratings >=90 or 'A or B' rankings with ratingText
+        # sometimes the rating is a letter grade
         except ValueError:
             if(rating_dict.get('rating') in 'AB') and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 good_ratings_list.append(rating)
+
             elif(rating_dict.get('rating') in 'DF') and rating_dict.get(
                 'ratingText') and (rating_dict.get('timespan')
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 bad_ratings_list.append(rating)
-            ratings_list_dict = {"good_ratings": good_ratings_list, "bad_ratings": bad_ratings_list}
+            ratings_list_dict = {"good_ratings": good_ratings_list,
+                                 "bad_ratings": bad_ratings_list}
+
     return ratings_list_dict
 
 
