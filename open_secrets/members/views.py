@@ -10,16 +10,16 @@ def index(request):
     if request.method == 'POST':
         # create a form instance and populate it with data from the request
         form = StatePickerForm(request.POST)
-        # check whether the form is valid 
+        # check whether the form is valid
         if form.is_valid():
             # use the state picked in the form to complete the api query
             # and generate a list that gets passed to render
             state = {form.cleaned_data['state']}
             legislator_list = get_legislator_list(state)
-            
+
     # if this is a GET create a blank form
     else:
-        form = StatePickerForm() 
+        form = StatePickerForm()
         legislator_list = []
     return render(request, 'layouts/index.html', {
         'form': form,
@@ -27,8 +27,8 @@ def index(request):
         })
 
 
-# a default value for votesmart id gets passed since all members 
-# won't have a votesmart id
+# a default value for votesmart id gets passed since all members
+# won't have a votesmart candidate_id
 def member_detail(request, candidate_name, candidate_id, votesmart_id=0):
     # get a dict of member details by querying the OpenSecrets,
     # VoteSmart, and NPR APIs
