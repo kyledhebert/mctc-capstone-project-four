@@ -98,15 +98,17 @@ def get_details_dict(candidate_name, candidate_id, votesmart_id):
     # start a FuturesSessions so we can make API calls asynchronously
     session = FuturesSession()
     contributors_list = get_contributors_list(session, candidate_id)
-    # if there is no votesmart id, pass a string
+    npr_story_list = get_story_list(session, candidate_name)
+
     if votesmart_id:
         ratings_dict = get_ratings_list(session, votesmart_id)
+        details_dict = {'contributors': contributors_list,
+                        'ratings': ratings_dict,
+                        'stories': npr_story_list}
+    # if there is no votesmart id, don't return a ratings dict
     else:
-        ratings_dict = ['There are no VoteSmart rankings for this candidate']
-
-    npr_story_list = get_story_list(session, candidate_name)
-    details_dict = {'contributors': contributors_list, 'ratings': ratings_dict,
-                    'stories': npr_story_list}
+        details_dict = {'contributors': contributors_list,
+                        'stories': npr_story_list}
     return details_dict
 
 
@@ -238,7 +240,7 @@ def parse_ratings(response):
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 bad_ratings_list.append(rating)
-                
+
     ratings_list_dict = {"good_ratings": good_ratings_list,
                          "bad_ratings": bad_ratings_list}
 
