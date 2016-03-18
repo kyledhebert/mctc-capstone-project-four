@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'about/$', TemplateView.as_view(template_name='layouts/about.html'),
         name='about'),
     url(r'^members/', include('members.urls')),
+    url(r'^accounts/', include('registration.backends.simple.urls')),
     url(r'^admin/', admin.site.urls),
 ]
