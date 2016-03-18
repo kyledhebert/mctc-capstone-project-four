@@ -5,7 +5,7 @@ from core.utils import get_env_variable
 from requests_futures.sessions import FuturesSession
 
 from .models import Legislator, Organization, Rating, NPRStory
-
+#Testing to make sure this is on the right branch.
 # retrieve the API keys from environment variables
 OPEN_SECRETS_API = get_env_variable('OPEN_SECRETS_API')
 VOTE_SMART_API = get_env_variable('VOTE_SMART_API')
