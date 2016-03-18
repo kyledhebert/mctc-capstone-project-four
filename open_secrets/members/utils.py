@@ -238,8 +238,9 @@ def parse_ratings(response):
                                    in ['2016', '2015-2016']):
                 rating = create_rating(rating_dict)
                 bad_ratings_list.append(rating)
-            ratings_list_dict = {"good_ratings": good_ratings_list,
-                                 "bad_ratings": bad_ratings_list}
+                
+    ratings_list_dict = {"good_ratings": good_ratings_list,
+                         "bad_ratings": bad_ratings_list}
 
     return ratings_list_dict
 
