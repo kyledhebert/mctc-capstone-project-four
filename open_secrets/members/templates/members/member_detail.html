@@ -1,7 +1,8 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Member Detail - {{ block.super }}{% endblock %}
 {% block content %}
-    <h1>{{ candidate_name }}</h1>
+    <form action="{% url 'members:save_member_details' %}" method="POST">
+    <h1>{{ candidate_name }}</h1>{% csrf_token %}<input type="submit" value="Save Results" /></form> 
     {% if contributors_list %}
     <h2>2016 Contributors</h2>
     <h3>These organizations donated to {{ candidate_name }} in 2016</h3>
@@ -54,7 +55,7 @@
     <h3>NPR recently aired these stories about {{ candidate_name }}</h3>
     <ul>
         {% for story in npr_story_list %}
-            <li><a href="{{ story.url}}">{{ story }}</a></li>
+            <li><a href="{{ story.url }}">{{ story }}</a></li>
         {% endfor %}        
     </ul>
     {% else %}
