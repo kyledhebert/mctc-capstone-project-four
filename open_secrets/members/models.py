@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -6,6 +7,7 @@ class Legislator(models.Model):
     name = models.CharField(max_length=50)
     party = models.CharField(max_length=2)
     votesmart_id = models.CharField(max_length=50)
+    saved_by = models.ManyToManyField(User)
 
     def __str__(self):
         return self.name
