@@ -1,5 +1,5 @@
 import requests
-
+import requests_cache
 from core.utils import get_env_variable
 
 from requests_futures.sessions import FuturesSession
@@ -49,6 +49,10 @@ def get_legislator_list(state):
 def get_legislators(state):
     """Returns a legislator JSON response from the OpenSecrets API"""
     payload = {'id': state, 'apikey': OPEN_SECRETS_API}
+
+    #This will set up a cache for the request that will last for half an hour.
+    requests_cache.install_cache('legislators_cache', backend='sqlite', expire_after=1800)
+
     request = requests.get(
         'http://www.opensecrets.org/api/?method=getLegislators&output=json',
         params=payload)
