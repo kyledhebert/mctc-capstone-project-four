@@ -1,0 +1,23 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Home - {{ block.super }}{% endblock %}
+{% block content %}
+{% if user.is_authenticated %}
+    <h1> {{ user.username }}'s Profile</h1>
+    <h2>Saved Legislators</h2>
+    {% if saved_legislator_list %}
+        <ul>
+        {% for legislator in saved_legislator_list %}
+            {% if legislator.votesmart_id == "" %}
+                <li><a href="{% url 'members:member_detail' legislator.name legislator.candidate_id %}">{{ legislator }}</a></li>
+            {% else %}
+                <li><a href="{% url 'members:member_detail' legislator.name legislator.candidate_id legislator.votesmart_id %}">{{ legislator }}</a></li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't saved any legislator profiles yet.</p>
+    {% endif %}
+{% else %}
+<p> You must be <a href="{% url 'auth_login' %}">logged in</a>to view profiles</p>    
+{% endif %}
+{% endblock %}  
