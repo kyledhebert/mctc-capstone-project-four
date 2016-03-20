@@ -39,7 +39,12 @@ def member_detail(request, candidate_name, candidate_id, votesmart_id=0):
     # store the args in the session so users can save the results  
     request.session['candidate_name'] = candidate_name
     request.session['candidate_id'] = candidate_id
-    request.session['votesmart_id'] = votesmart_id
+    # don't pass 0 to the session, if id=0, change to empty string
+    if votesmart_id == 0:
+        votesmart_id = ""
+        request.session['votesmart_id'] = votesmart_id
+    else:
+        request.session['votesmart_id'] = votesmart_id         
     
     # get a dict of member details by querying the OpenSecrets,
     # VoteSmart, and NPR APIs
@@ -88,3 +93,10 @@ def save_member_details(request):
     del request.session['votesmart_id']
 
     return HttpResponseRedirect(reverse('home'))
+
+
+def user_profile(request):
+    saved_legislator_list = Legislator.objects.filter(saved_by=request.user.id)
+
+    return render(request, 'members/user_profile.html', {
+        'saved_legislator_list': saved_legislator_list})

@@ -16,4 +16,5 @@ urlpatterns = [
         views.member_detail, name='member_detail'),
     url(r'^save/$',
         views.save_member_details, name='save_member_details'),
+    url(r'^user_profile/$', views.user_profile, name='user_profile'),
 ]
