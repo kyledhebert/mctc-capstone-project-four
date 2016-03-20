@@ -12,7 +12,7 @@ This application is a group project built as part of the software development ca
 ## Instructions
  - Install the required Python packages in your virtualenv by running `pip install -r requirements.txt`
  - You will need to add your own OpenSecrets, VoteSmart and NPR API keys as environment variables. Keys can be acquired at the urls below:
-    - <http://www.opensecrets.org/resources/create/apis.php>
-    - <http://votesmart.org/share/api>
-    - <http://www.npr.org/api/index>
-- From the open_secrets directory run python manage.py runserver and visit <127.0.0.1:8000> in your browser to use the app.
+  - <http://www.opensecrets.org/resources/create/apis.php>
+  - <http://votesmart.org/share/api>
+  - <http://www.npr.org/api/index>
+ - From the open_secrets directory run python manage.py runserver and visit <127.0.0.1:8000> in your browser to use the app.
