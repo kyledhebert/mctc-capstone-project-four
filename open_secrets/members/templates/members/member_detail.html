@@ -1,9 +1,12 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Member Detail - {{ block.super }}{% endblock %}
 {% block content %}
+    <h1>{{ candidate_name }}</h1>
     {% if user.is_authenticated %}
-    <form action="{% url 'members:save_member_details' %}" method="POST">
-    <h1>{{ candidate_name }}</h1>{% csrf_token %}<input type="submit" value="Save Results" /></form>
+        <form action="{% url 'members:save_member_details' %}" method="POST">
+        {% csrf_token %}<input type="submit" value="Save Results" /></form>
+    {% else %}
+        <p><a href="{% url 'auth_login' %}">Login</a> or <a href="{% url 'registration_register' %}">register</a> to save this result.</p>
     {% endif %} 
     {% if contributors_list %}
     <h2>2016 Contributors</h2>
