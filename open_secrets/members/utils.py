@@ -12,6 +12,7 @@ VOTE_SMART_API = get_env_variable('VOTE_SMART_API')
 NPR_API = get_env_variable('NPR_API')
 
 # set up a requests-cache for requests that will last for half an hour.
+# This may need to be commented out if using a network that adds redirects to the header.
 requests_cache.install_cache(
     'legislators_cache',
     backend='sqlite',
